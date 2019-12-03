@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Render</title>
+
+    <script src="js/expand-data.js"></script>
+    <script src="js/render.js"></script>
+
+    <link rel="stylesheet" href="css/render.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div class="controlPanel">
+        show/hide:
+        <input type="button" id="entitiesButton" value="entities">
+        <input type="button" id="dateButton" value="date">
+        <input type="button" id="timeButton" value="time">
+        <br>
+        <br>
+        raw data:
+        <a href="http://localhost:3000/entities" target="_blank"><input type="button" value="entities"></a>
+        <a href="http://localhost:3000/interactions" target="_blank"><input type="button" value="interactions"></a>
+        <a href="http://localhost:3000/relationships" target="_blank"><input type="button" value="relationships"></a>
+        <br>
+        <br>
+        <%= log %>
+    </div>
+
+    <div id="content">
+        <div id="entities" class="hide">
+
+            <div class="controlPanel">
+                <form class="item" action="http://localhost:3000/newentity" method="post">
+                    <input type="text" name="inputA" id="inputEntA" placeholder="a" autocomplete="off" autofocus>
+                    <br>
+                    <input type="text" name="inputC" id="inputEntC" placeholder="c (optional)" autocomplete="off">
+                    <br>
+                    <br>
+                    <input type="submit" value="add entity">
+                </form>
+            </div>
+
+            <div class="data">
+                <table id="entitiesTable" class="list">
+                    <tr>
+                        <td><i class="material-icons">scatter_plot</i></td>
+                    </tr>
+                    <tr>
+                        <td><strong>entities</strong></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td><span>a/b</span>&nbsp;<span class="grey">(relationships/interactions)</span></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+
+        <div id="relationships">
+
+            <div class="controlPanel">
+                <form class="item" action="http://localhost:3000/newrelationship" method="post">
+                    <input type="text" name="inputA" id="inputIntA" placeholder="a" autocomplete="off"><input
+                        type="text" name="inputB" id="inputIntB" placeholder="b" autocomplete="off">
+                    <br>
+                    <input type="text" name="inputC" id="inputIntC" placeholder="c (optional)" autocomplete="off">
+                    <br>
+                    <br>
+                    <input type="submit" value="add relationship">
+                    <input type="button" id="interactionsButton" value="show all interactions">
+                </form>
+
+            </div>
+
+            <div class="data">
+                <table id="relationshipsTable" class="list">
+                    <tr>
+                        <td><i class="material-icons">share</i></td>
+                    </tr>
+                    <tr>
+                        <td><strong>relationships</strong></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <span class="grey">date/time</span>&nbsp;&nbsp;<span>a&nbsp;———&nbsp;b</span>&nbsp;<span
+                                class="int connection">c</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

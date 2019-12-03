@@ -1,0 +1,9 @@
+{
+    "show": {
+        "entities": true,
+        "date": true,
+        "time": true,
+        "interactions": false
+    },
+    "color": "red"
+}

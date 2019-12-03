@@ -1,0 +1,109 @@
+body {
+    font-family: monospace;
+    font-size: 0.8em;
+    margin: 0px;
+    padding: 0px;
+}
+
+.time,
+.grey {
+    opacity: 0.2;
+}
+
+.date {
+    background-color: black;
+    color: white;
+    opacity: 0.2;
+}
+
+.int.input.settings {
+    background-color: rgba(255, 215, 0, 0.3);
+
+}
+
+ul {
+    margin: 0 16px;
+    padding: 0px;
+}
+
+#dotless {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+.data {
+    margin: 20px;
+}
+
+.list,
+.list td {
+    margin: 0px;
+    padding: 0px;
+    border-spacing: 0px;
+}
+
+#inputEntA,
+#inputIntA {
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+#inputEntA,
+#inputIntA,
+#inputIntB {
+    width: 140px;
+}
+
+#inputEntC,
+#inputIntC {
+    width: 295px;
+}
+
+#container {
+    width: 100px;
+    height: 100px;
+}
+
+.hide {
+    display: none;
+}
+
+.controlPanel {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding: 20px;
+}
+
+#content {
+    width: 100%;
+    display: flex;
+}
+
+.int.connection {
+    color: blue;
+}
+
+input[type="text"] {
+    /* border-color: rgba(0, 0, 0, 0.05); */
+    border: 1px solid white;
+    padding: 4px;
+    margin: 0px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border: 1px solid black;
+}
+
+.ent.input,
+.int.input {
+    cursor: pointer;
+    background-color: transparent;
+    color: black;
+}
+
+.ent.input:hover,
+.int.input:hover {
+    background-color: blue;
+    color: white;
+}
