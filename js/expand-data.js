@@ -1,6 +1,6 @@
-//expand data records of lines (relationships) for easy access later
+//expand data records of interactions for easy access later
 
-function expandData (d) {
+function expandData(d) {
 
     //deep clone
     const data = JSON.parse(JSON.stringify(d));
@@ -50,19 +50,19 @@ function expandData (d) {
         }
 
         ////////////////////////////////////////////////////////////
-        //last entry of the same lines
+        //last interaction of the same relationship
         for (let j = 0; j < data.int.length; j++) {
 
             if (j > i) {
 
-                //if both lines are the same
+                //if both interactions are the same
                 if (checkSame(data.int[i].a, data.int[i].b, data.int[j].a, data.int[j].b)) {
                     data.int[i].lastOfTheSame = false;
                     //jump out of the loop
                     break;
                 }
 
-                //if there is no coincidence, this line is unique, therefore the last one
+                //if there is no coincidence, this interaction is unique, therefore the last one
                 data.int[i].lastOfTheSame = true;
 
                 //if last loop, assign value to last item (always will be true) 
@@ -84,6 +84,40 @@ function expandData (d) {
         }
         data.int[i].lastOfTheDay = true;
     }
+
+    //loop relationships
+    //store the ids of the entities for each relationship
+    for (let i = 0; i < data.rel.length; i++) {
+        //label to break nested loops
+        next:
+        //loop interactions
+        for (let j = 0; j < data.int.length; j++) {
+            //look for a match of interactions (ids)
+            //in this case we use the first interaction inside each relationship's list
+            if (data.int[j]._id === data.rel[i].list[0]) {
+                //loop entities
+                for (let k = 0; k < data.ent.length; k++) {
+                    //look for a match between entities
+                    //first entity of the relationship
+                    if (data.ent[k]._id === data.int[j].a) {
+                        //store the id inside relationships
+                        data.rel[i].a = data.ent[k]._id;
+                    }
+                    //second entity of the relationship
+                    if (data.ent[k]._id === data.int[j].b) {
+                        //store the id inside relationships
+                        data.rel[i].b = data.ent[k]._id;
+                    }
+                    //once both entities found
+                    if (data.rel[i].a && data.rel[i].b) {
+                        //exit the two loops to stop searching
+                        break next;
+                    }
+                }
+            }
+        }
+    }
+
 
     console.log("data expanded");
     return data;
@@ -117,12 +151,11 @@ function lastD(prevDate, thisDate) {
 function checkSame(a1, b1, a2, b2) {
 
     if (
-        //if the two dots creating the first line are the same as the second line
+        //if the two entities creating the first interaction are the same as the second interaction
         (a1 === a2 && b1 === b2)
         //or
         ||
-        //if the two dots creating the first line are the same as the second line
-        //but in reverse order
+        //the same but in reverse order
         (a1 === b2 && b1 === a2)
     ) {
         return true;
@@ -132,16 +165,16 @@ function checkSame(a1, b1, a2, b2) {
 
 }
 
-function formatTime(date){
+function formatTime(date) {
     const d = new Date(date);
     return twoDigits(d.getHours()) + ":" + twoDigits(d.getMinutes()) + ":" + twoDigits(d.getSeconds());
 }
 
-function formatDate(date){
+function formatDate(date) {
     const d = new Date(date);
     return d.getFullYear() + "-" + twoDigits(d.getMonth() + 1) + "-" + twoDigits(d.getDate());
 }
 
-function twoDigits(n){
+function twoDigits(n) {
     if (n < 10) { return "0" + n; } else { return n; }
 }
