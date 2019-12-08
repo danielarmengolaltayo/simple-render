@@ -10,6 +10,8 @@
 
     <script src="js/expand-data.js"></script>
     <script src="js/render.js"></script>
+    <script src="js/libraries/p5.js"></script>
+    <script src="js/libraries/matter.js"></script>
 
     <link rel="stylesheet" href="css/render.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -19,10 +21,18 @@
 <body>
 
     <div class="controlPanel">
+        <form class="item" action="http://localhost:3000/newrelationship" method="post">
+            <input type="text" name="inputA" id="inputA" placeholder="a" autocomplete="off">
+            <input type="text" name="inputB" id="inputB" placeholder="b" autocomplete="off">
+            <input type="text" name="inputC" id="inputC" placeholder="c (optional)" autocomplete="off">
+            <input type="submit" value="add">
+        </form>
+        <br>
         show/hide:
         <input type="button" id="entitiesButton" value="entities">
         <input type="button" id="dateButton" value="date">
         <input type="button" id="timeButton" value="time">
+        <input type="button" id="interactionsButton" value="show all interactions">
         <br>
         <br>
         raw data:
@@ -35,18 +45,10 @@
     </div>
 
     <div id="content">
-        <div id="entities" class="hide">
 
-            <div class="controlPanel">
-                <form class="item" action="http://localhost:3000/newentity" method="post">
-                    <input type="text" name="inputA" id="inputEntA" placeholder="a" autocomplete="off" autofocus>
-                    <br>
-                    <input type="text" name="inputC" id="inputEntC" placeholder="c (optional)" autocomplete="off">
-                    <br>
-                    <br>
-                    <input type="submit" value="add entity">
-                </form>
-            </div>
+        <div id="p5"></div>
+
+        <div id="entities">
 
             <div class="data">
                 <table id="entitiesTable" class="list">
@@ -75,20 +77,6 @@
 
         <div id="relationships">
 
-            <div class="controlPanel">
-                <form class="item" action="http://localhost:3000/newrelationship" method="post">
-                    <input type="text" name="inputA" id="inputIntA" placeholder="a" autocomplete="off"><input
-                        type="text" name="inputB" id="inputIntB" placeholder="b" autocomplete="off">
-                    <br>
-                    <input type="text" name="inputC" id="inputIntC" placeholder="c (optional)" autocomplete="off">
-                    <br>
-                    <br>
-                    <input type="submit" value="add relationship">
-                    <input type="button" id="interactionsButton" value="show all interactions">
-                </form>
-
-            </div>
-
             <div class="data">
                 <table id="relationshipsTable" class="list">
                     <tr>
@@ -116,6 +104,8 @@
 
     </div>
 
+    <script src="js/particles.js"></script>
+    <script src="js/particle.js"></script>
 </body>
 
 </html>
