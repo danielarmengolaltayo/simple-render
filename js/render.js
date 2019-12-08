@@ -1,9 +1,11 @@
-const data_url = "http://localhost:3000/data"
 let settings = {};
-
-
+let loaded = false;
+let data;
 
 load().
+    then(function () {
+        loaded = true;
+    }).
     catch(err => {
         console.log("ERROR?");
         console.error(err);
@@ -11,25 +13,27 @@ load().
 
 
 async function load() {
-    let data = await getData();
+    data = await getData("http://localhost:3000/data");
     data = expandData(data);
-    settingsJSON = await getSettings();
+    console.log(data);
+    settingsJSON = await getSettings("./json/settings.json");
     settings = JSON.parse(JSON.stringify(settingsJSON));
     vizData(data);
     applySettings(settings);
+
+
 }
 
 
-async function getData() {
-    const response = await fetch(data_url);
+async function getData(d) {
+    const response = await fetch(d);
     const data = await response.json();
     // console.log(data);
     return data;
 }
 
-
-async function getSettings() {
-    const response = await fetch("./json/settings.json");
+async function getSettings(s) {
+    const response = await fetch(s);
     const settings = await response.json();
     // console.log(settings);
     return settings;
@@ -41,12 +45,11 @@ function applySettings(settings) {
     if (settings.color) {
         // document.getElementById("controlPanel").style.backgroundColor = settings.color;
     }
-
     if (settings.show) {
         const s = settings.show;
         if (s.entities === true || s.entities === false) settingsShow("entities", "#entities");
-        if (s.date === true || s.date === false) settingsShow("date");
-        if (s.time === true || s.time === false) settingsShow("time");
+        if (s.date === true || s.date === false) settingsShow("date", ".date");
+        if (s.time === true || s.time === false) settingsShow("time", ".time");
         if (s.interactions === true || s.interactions === false) settingsShow("interactions", ".notTheLast");
     }
 }
@@ -61,7 +64,7 @@ function vizData(data) {
 
         const tdEnt = tableEnt.appendChild(document.createElement("tr")).appendChild(document.createElement("td"));
 
-        tdEnt.innerHTML = "<span class='ent input'>" + data.ent[i].self + "</span>";
+        tdEnt.innerHTML = "<span class='ent input' id='" + data.ent[i]._id + "'>" + data.ent[i].self + "</span>";
         tdEnt.innerHTML += "<span class='ent'>&nbsp;</span>";
         tdEnt.innerHTML += "<span class='ent grey'>(" + data.ent[i].others.length + "/" + data.ent[i].totalInt + ")</span>";
 
@@ -69,8 +72,6 @@ function vizData(data) {
 
 
     for (let i = data.int.length - 1; i >= 0; i--) {
-
-
 
         const tdDate = tableInt.appendChild(document.createElement("tr")).appendChild(document.createElement("td"));
         const tdInt = tableInt.appendChild(document.createElement("tr")).appendChild(document.createElement("td"));
@@ -95,18 +96,35 @@ function vizData(data) {
         if (!data.int[i].lastOfTheSame) {
             for (let i = 0; i < tdInt.getElementsByClassName("int").length; i++) {
                 tdInt.getElementsByClassName("int")[i].classList.add("notTheLast");
-                // tdInt.getElementsByClassName("int")[i].classList.add("filter");
                 tdInt.getElementsByClassName("int")[i].classList.add("grey");
             }
         }
 
-
-
-
-
     }
 
 
+    setupButtons();
+
+}
+
+
+//toogle elements in settings (show/hide)
+function settingsShow(settingsKey, involvedElements) {
+    const e = document.querySelectorAll(involvedElements);
+    for (let i = 0; i < e.length; i++) {
+        if (settings.show[settingsKey]) {
+            e[i].classList.remove("hide");
+        } else {
+            e[i].classList.add("hide");
+        }
+    }
+}
+
+//add event listeners to enable buttons
+function setupButtons() {
+
+    ////////////////////////////////
+    //add event listeners to settings buttons
     document.getElementById("entitiesButton").addEventListener("click", function () {
         settings.show.entities = !settings.show.entities;
         settingsShow("entities", "#entities");
@@ -114,12 +132,12 @@ function vizData(data) {
 
     document.getElementById("dateButton").addEventListener("click", function () {
         settings.show.date = !settings.show.date;
-        settingsShow("date");
+        settingsShow("date", ".date");
     });
 
     document.getElementById("timeButton").addEventListener("click", function () {
         settings.show.time = !settings.show.time;
-        settingsShow("time");
+        settingsShow("time", ".time");
     });
 
     const interactionsButton = document.getElementById("interactionsButton");
@@ -133,28 +151,37 @@ function vizData(data) {
         settingsShow("interactions", ".notTheLast");
     });
 
+    ////////////////////////////////
+    //add event listeners to all listed elements to prefill inputs
+    const inA = document.getElementById("inputA");
+    const inB = document.getElementById("inputB");
 
-    //click on listed elements as inputs
-    const inIntA = document.getElementById("inputIntA");
-    const inIntB = document.getElementById("inputIntB");
     //list of entities
     const ents = document.getElementsByClassName("ent input");
-    let inIntAfocus = true;
+    let inAfocus = true;
 
-    inIntA.addEventListener("click", function () { inIntAfocus = true; });
-    inIntB.addEventListener("click", function () { inIntAfocus = false; });
+    inA.addEventListener("click", function () { inAfocus = true; });
+    inB.addEventListener("click", function () { inAfocus = false; });
 
     for (let i = 0; i < ents.length; i++) {
         ents[i].addEventListener("click", function () {
-            if (inIntAfocus) {
-                inIntA.value = ents[i].innerHTML;
-                inIntB.focus();
-                inIntAfocus = false;
+            if (inAfocus) {
+                inA.value = ents[i].innerHTML;
+                inB.focus();
+                inAfocus = false;
             } else {
-                inIntB.value = ents[i].innerHTML;
-                inIntA.focus();
-                inIntAfocus = true;
+                inB.value = ents[i].innerHTML;
+                inA.focus();
+                inAfocus = true;
             }
+        });
+
+        ents[i].addEventListener("mouseenter", function (e) {
+            highlightEnt(e.target.id);
+        });
+
+        ents[i].addEventListener("mouseleave", function () {
+            notHighlightAny();
         });
     }
 
@@ -163,26 +190,11 @@ function vizData(data) {
 
     for (let i = 0; i < ints.length; i++) {
         ints[i].addEventListener("click", function () {
-            inIntA.value = this.getElementsByClassName("intA")[0].innerHTML;
-            inIntB.value = this.getElementsByClassName("intB")[0].innerHTML;
-            document.getElementById("inputIntC").focus();
-            inIntAfocus = true;
+            inA.value = this.getElementsByClassName("intA")[0].innerHTML;
+            inB.value = this.getElementsByClassName("intB")[0].innerHTML;
+            document.getElementById("inputC").focus();
+            inAfocus = true;
         });
     }
 
-}
-
-
-function settingsShow(settingsKey, involvedElements) {
-    if (!involvedElements) {
-        involvedElements = "." + settingsKey;
-    }
-    const e = document.querySelectorAll(involvedElements);
-    for (let i = 0; i < e.length; i++) {
-        if (settings.show[settingsKey]) {
-            e[i].classList.remove("hide");
-        } else {
-            e[i].classList.add("hide");
-        }
-    }
 }
