@@ -1,28 +1,57 @@
-let settings = {};
+// let settings = {};
 let loaded = false;
 let data;
+
+let socket = io.connect("http://localhost:3000");
 
 load().
     then(function () {
         loaded = true;
+        console.log("render loaded");
     }).
     catch(err => {
-        console.log("ERROR?");
+        console.log("ERROR loading render");
         console.error(err);
     });
 
 
 async function load() {
-    data = await getData("http://localhost:3000/data");
-    data = expandData(data);
+    const rawData = await getData("http://localhost:3000/data");
+    console.log("raw", rawData);
+    data = JSON.parse(JSON.stringify(rawData)); //deep clone
     console.log(data);
-    settingsJSON = await getSettings("./json/settings.json");
-    settings = JSON.parse(JSON.stringify(settingsJSON));
-    vizData(data);
-    applySettings(settings);
+    data = indexData(data);
+    data = expandData(data);
 
+    vizData(data);
+
+    applySettings(data.app[0].settings);
+
+
+    socket.on("hellofromserver", function (data) {
+        console.log(data);
+        socket.emit("hellofromclient", "websockets: hello from client");
+    });
+
+
+    console.log(data);
 
 }
+
+function sendMessageToTheServer(s) {
+    console.log("click on settings:", s);
+    socket.emit("settings", s);
+
+}
+
+socket.on("settingsresponse", function (res) {
+    if (res) {
+        // console.log("response: ", res);
+
+        applySettings(res);
+
+    }
+});
 
 
 async function getData(d) {
@@ -32,26 +61,27 @@ async function getData(d) {
     return data;
 }
 
-async function getSettings(s) {
-    const response = await fetch(s);
-    const settings = await response.json();
-    // console.log(settings);
-    return settings;
+function applySettings(settings) {
+
+    settingsShow("showEntities", "#entities");
+    settingsShow("showInteractions", ".notTheLast");
+
+    //toogle elements in settings (show/hide)
+    function settingsShow(settingsKey, involvedElements) {
+        const e = document.querySelectorAll(involvedElements);
+        for (let i = 0; i < e.length; i++) {
+            if (settings[settingsKey]) {
+                e[i].classList.remove("hide");
+            } else {
+                e[i].classList.add("hide");
+            }
+        }
+    }
+
 }
 
+function updateSetting(s) {
 
-function applySettings(settings) {
-    // console.log(settings);
-    if (settings.color) {
-        // document.getElementById("controlPanel").style.backgroundColor = settings.color;
-    }
-    if (settings.show) {
-        const s = settings.show;
-        if (s.entities === true || s.entities === false) settingsShow("entities", "#entities");
-        if (s.date === true || s.date === false) settingsShow("date", ".date");
-        if (s.time === true || s.time === false) settingsShow("time", ".time");
-        if (s.interactions === true || s.interactions === false) settingsShow("interactions", ".notTheLast");
-    }
 }
 
 
@@ -64,9 +94,9 @@ function vizData(data) {
 
         const tdEnt = tableEnt.appendChild(document.createElement("tr")).appendChild(document.createElement("td"));
 
-        tdEnt.innerHTML = "<span class='ent input' id='" + data.ent[i]._id + "'>" + data.ent[i].self + "</span>";
+        tdEnt.innerHTML = "<span class='ent input' id='" + data.ent[i]._id + "'>" + data.app.ent[i].c + "</span>";
         tdEnt.innerHTML += "<span class='ent'>&nbsp;</span>";
-        tdEnt.innerHTML += "<span class='ent grey'>(" + data.ent[i].others.length + "/" + data.ent[i].totalInt + ")</span>";
+        tdEnt.innerHTML += "<span class='ent grey'>(" + data.ent[i].rels.length + "/" + data.app.ent[i].totalInt + ")</span>";
 
     }
 
@@ -76,24 +106,24 @@ function vizData(data) {
         const tdDate = tableInt.appendChild(document.createElement("tr")).appendChild(document.createElement("td"));
         const tdInt = tableInt.appendChild(document.createElement("tr")).appendChild(document.createElement("td"));
 
-        if (data.int[i].lastOfTheDay) {
-            tdDate.innerHTML = "<span class='date'>" + data.int[i].d + "</span>";
+        if (data.app.int[i].lastOfTheDay) {
+            tdDate.innerHTML = "<span class='date'>" + data.app.int[i].d + "</span>";
         }
 
         tdInt.innerHTML += "<span class='int time'>&nbsp;&nbsp;</span";
-        tdInt.innerHTML += "<span class='int time'>" + data.int[i].t + "</span>";
+        tdInt.innerHTML += "<span class='int time'>" + data.app.int[i].t + "</span>";
         tdInt.innerHTML += "<span class='int time'>&nbsp;</span>";
-        if (data.int[i].selfA === "settings" || data.int[i].selfB === "settings") {
-            tdInt.innerHTML += "<span class='int input settings'><span class='intA'>" + data.int[i].selfA + "</span><span> ——— </span><span class='intB'>" + data.int[i].selfB + "</span></span>";
-        } else {
-            tdInt.innerHTML += "<span class='int input'><span class='intA'>" + data.int[i].selfA + "</span><span> ——— </span><span class='intB'>" + data.int[i].selfB + "</span></span>";
-        }
-        if (data.int[i].c) {
+        // if (data.int[i].ents.a === data.int[i].ents.b && data.int[i].context.c === "settings") {
+        //     tdInt.innerHTML += "<span class='int input settings'><span class='intA'>" + data.int[i].selfA + "</span><span> ——— </span><span class='intB'>" + data.int[i].selfB + "</span></span>";
+        // } else {
+        tdInt.innerHTML += "<span class='int input' id='" + data.int[i]._id + "'><span class='intA'>" + data.app.ent[data.app.int[i].aIndex].c + "</span><span> ——— </span><span class='intB'>" + data.app.ent[data.app.int[i].bIndex].c + "</span></span>";
+        // }
+        if (data.int[i].context.c) {
             tdInt.innerHTML += "<span class='int'>&nbsp;</span>";
-            tdInt.innerHTML += "<span class='int connection'>" + data.int[i].c + "</span>";
+            tdInt.innerHTML += "<span class='int connection'>" + data.int[i].context.c + "</span>";
         }
 
-        if (!data.int[i].lastOfTheSame) {
+        if (!data.app.int[i].lastOfTheSame) {
             for (let i = 0; i < tdInt.getElementsByClassName("int").length; i++) {
                 tdInt.getElementsByClassName("int")[i].classList.add("notTheLast");
                 tdInt.getElementsByClassName("int")[i].classList.add("grey");
@@ -108,17 +138,7 @@ function vizData(data) {
 }
 
 
-//toogle elements in settings (show/hide)
-function settingsShow(settingsKey, involvedElements) {
-    const e = document.querySelectorAll(involvedElements);
-    for (let i = 0; i < e.length; i++) {
-        if (settings.show[settingsKey]) {
-            e[i].classList.remove("hide");
-        } else {
-            e[i].classList.add("hide");
-        }
-    }
-}
+
 
 //add event listeners to enable buttons
 function setupButtons() {
@@ -126,29 +146,21 @@ function setupButtons() {
     ////////////////////////////////
     //add event listeners to settings buttons
     document.getElementById("entitiesButton").addEventListener("click", function () {
-        settings.show.entities = !settings.show.entities;
-        settingsShow("entities", "#entities");
-    });
-
-    document.getElementById("dateButton").addEventListener("click", function () {
-        settings.show.date = !settings.show.date;
-        settingsShow("date", ".date");
-    });
-
-    document.getElementById("timeButton").addEventListener("click", function () {
-        settings.show.time = !settings.show.time;
-        settingsShow("time", ".time");
+        // settings.showEntities = !settings.showEntities;
+        // settingsShow("showEntities", "#entities");
+        sendMessageToTheServer("showEntities");
     });
 
     const interactionsButton = document.getElementById("interactionsButton");
     interactionsButton.addEventListener("click", function () {
-        settings.show.interactions = !settings.show.interactions;
-        if (interactionsButton.value === "show all interactions") {
-            interactionsButton.value = "show only last interactions";
-        } else {
-            interactionsButton.value = "show all interactions";
-        }
-        settingsShow("interactions", ".notTheLast");
+        // settings.showInteractions = !settings.showInteractions;
+        // if (interactionsButton.value === "show all interactions") {
+        //     interactionsButton.value = "show only last interactions";
+        // } else {
+        //     interactionsButton.value = "show all interactions";
+        // }
+        // settingsShow("showInteractions", ".notTheLast");
+        sendMessageToTheServer("showInteractions");
     });
 
     ////////////////////////////////
@@ -195,6 +207,16 @@ function setupButtons() {
             document.getElementById("inputC").focus();
             inAfocus = true;
         });
+
+        ints[i].addEventListener("mouseenter", function (e) {
+            highlightInt(e.target.id);
+            // console.log(e.target.id);
+        });
+
+        ints[i].addEventListener("mouseleave", function () {
+            notHighlightAny();
+        });
+
     }
 
 }
