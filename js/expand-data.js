@@ -1,123 +1,79 @@
 //expand data records of interactions for easy access later
 
-function expandData(d) {
-
-    //deep clone
-    const data = JSON.parse(JSON.stringify(d));
-
-    //loop all the data
+function expandData(data) {
 
     //loop entities
-    //calculate total of interactions for each entity
     let total = 0;
+    let c;
     for (let i = 0; i < data.ent.length; i++) {
 
-        for (let j = 0; j < data.ent[i].others.length; j++) {
-            for (let k = 0; k < data.rel.length; k++) {
-                if (data.ent[i].others[j] === data.rel[k]._id) {
-                    total += data.rel[k].list.length;
-                    break;
-                }
+        //loop all relationships for each entity (using indexes)
+        //different entities share the same relationship, this loop repeat some relationships and interactions
+        for (let j = 0; j < data.app.ent[i].relsIndex.length; j++) {
+            const index = data.app.ent[i].relsIndex[j];
+            //calculate total
+            total += data.rel[index].ints.length;
+            //if both indexes are the same, an entity is interacting with itself
+            if (data.app.rel[index].aIndex === data.app.rel[index].bIndex) {
+                //calculate c
+                c = data.int[data.app.rel[index].intsIndex[0]].context.c;
             }
         }
 
-        data.ent[i].totalInt = total;
+        ////////////////////////////////////////////////////////////
+        //save total of interactions for each entity and reset the counter
+        data.app.ent[i].totalInt = total;
         total = 0;
 
+        ////////////////////////////////////////////////////////////
+        //save value of c
+        data.app.ent[i].c = c;
+
+    }
+
+    //loop relationships
+    for (let i = 0; i < data.rel.length; i++) {
+
+        //loop all interacions for each relationship (using indexes)
+        //relationships contain all interactions, this loop goes through all interactions
+        for (let j = 0; j < data.app.rel[i].intsIndex.length; j++) {
+
+            const ii = data.app.rel[i].intsIndex[j];
+
+            ////////////////////////////////////////////////////////////
+            //save the ids of the entities for each relationship
+            data.app.rel[i].a = data.int[ii].ents.a;
+            data.app.rel[i].b = data.int[ii].ents.b;
+
+            ////////////////////////////////////////////////////////////
+            //format the long "date" field into short date and time separately
+            data.app.int[ii].d = formatDate(data.int[ii].context.date);
+            data.app.int[ii].t = formatTime(data.int[ii].context.date);
+
+            ////////////////////////////////////////////////////////////
+            //save number of relationships for each entity inside interactions
+            const ai = data.app.rel[i].aIndex;
+            data.app.int[ii].aNumOfRels = data.ent[ai].rels.length;
+            const bi = data.app.rel[i].bIndex;
+            data.app.int[ii].bNumOfRels = data.ent[bi].rels.length;
+
+            ////////////////////////////////////////////////////////////
+            //last interaction of the same relationship
+            const lastIntIndex = data.app.rel[i].intsIndex[data.app.rel[i].intsIndex.length - 1];
+            (ii === lastIntIndex) ? data.app.int[ii].lastOfTheSame = true : data.app.int[ii].lastOfTheSame = false;
+
+        }
     }
 
     //loop interactions
     for (let i = 0; i < data.int.length; i++) {
 
         ////////////////////////////////////////////////////////////
-        //expand data.int w/ readable content from data.ent for easier retrieval when rendering
-        for (let j = 0; j < data.ent.length; j++) {
-
-            //for the first entity
-            if (data.int[i].a == data.ent[j]._id) {
-                //add content from "entities" into "interactions"
-                data.int[i].selfA = data.ent[j].self;
-                //add number of relationships
-                data.int[i].othersA = data.ent[j].others.length;
-            }
-
-            //the same for the second entity
-            if (data.int[i].b == data.ent[j]._id) {
-                data.int[i].selfB = data.ent[j].self;
-                data.int[i].othersB = data.ent[j].others.length;
-            }
-
-        }
-
-        ////////////////////////////////////////////////////////////
-        //last interaction of the same relationship
-        for (let j = 0; j < data.int.length; j++) {
-
-            if (j > i) {
-
-                //if both interactions are the same
-                if (checkSame(data.int[i].a, data.int[i].b, data.int[j].a, data.int[j].b)) {
-                    data.int[i].lastOfTheSame = false;
-                    //jump out of the loop
-                    break;
-                }
-
-                //if there is no coincidence, this interaction is unique, therefore the last one
-                data.int[i].lastOfTheSame = true;
-
-                //if last loop, assign value to last item (always will be true) 
-            } else if (j === data.int.length - 1) {
-                data.int[i].lastOfTheSame = true;
-            }
-
-        }
-
-        ////////////////////////////////////////////////////////////
-        //format the long "date" field into short date and time separately
-        data.int[i].d = formatDate(data.int[i].date);
-        data.int[i].t = formatTime(data.int[i].date);
-
-        ////////////////////////////////////////////////////////////
         //last entry of the day
-        if (i > 0) {
-            data.int[i - 1].lastOfTheDay = lastD(data.int[i - 1].d, data.int[i].d);
-        }
-        data.int[i].lastOfTheDay = true;
-    }
+        if (i > 0) { data.app.int[i - 1].lastOfTheDay = lastD(data.app.int[i - 1].d, data.app.int[i].d); }
+        data.app.int[i].lastOfTheDay = true;
 
-    //loop relationships
-    //store the ids of the entities for each relationship
-    for (let i = 0; i < data.rel.length; i++) {
-        //label to break nested loops
-        next:
-        //loop interactions
-        for (let j = 0; j < data.int.length; j++) {
-            //look for a match of interactions (ids)
-            //in this case we use the first interaction inside each relationship's list
-            if (data.int[j]._id === data.rel[i].list[0]) {
-                //loop entities
-                for (let k = 0; k < data.ent.length; k++) {
-                    //look for a match between entities
-                    //first entity of the relationship
-                    if (data.ent[k]._id === data.int[j].a) {
-                        //store the id inside relationships
-                        data.rel[i].a = data.ent[k]._id;
-                    }
-                    //second entity of the relationship
-                    if (data.ent[k]._id === data.int[j].b) {
-                        //store the id inside relationships
-                        data.rel[i].b = data.ent[k]._id;
-                    }
-                    //once both entities found
-                    if (data.rel[i].a && data.rel[i].b) {
-                        //exit the two loops to stop searching
-                        break next;
-                    }
-                }
-            }
-        }
     }
-
 
     console.log("data expanded");
     return data;
@@ -128,6 +84,8 @@ function expandData(d) {
 //auxiliar functions to make main function more readable
 
 function lastD(prevDate, thisDate) {
+
+    //assuming that entries are sorted by date
 
     //if consecutive data entries share the same date
     if (prevDate === thisDate) {
@@ -165,11 +123,13 @@ function checkSame(a1, b1, a2, b2) {
 
 }
 
+//format time into HH:MM:SS
 function formatTime(date) {
     const d = new Date(date);
     return twoDigits(d.getHours()) + ":" + twoDigits(d.getMinutes()) + ":" + twoDigits(d.getSeconds());
 }
 
+//format date into YY-MM-DD
 function formatDate(date) {
     const d = new Date(date);
     return d.getFullYear() + "-" + twoDigits(d.getMonth() + 1) + "-" + twoDigits(d.getDate());
