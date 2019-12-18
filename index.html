@@ -8,10 +8,14 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Render</title>
 
+    <script src="js/libraries/socket.io.js"></script> <!-- before render.js -->
+    <script src="js/index-data.js"></script>
     <script src="js/expand-data.js"></script>
     <script src="js/render.js"></script>
     <script src="js/libraries/p5.js"></script>
     <script src="js/libraries/matter.js"></script>
+
+
 
     <link rel="stylesheet" href="css/render.css">
 
@@ -20,7 +24,7 @@
 <body>
 
     <div class="controlPanel">
-        <form class="item" action="http://localhost:3000/newrelationship" method="post">
+        <form class="item" action="http://localhost:3000/new" method="post">
             <input type="text" name="inputA" id="inputA" placeholder="a" autocomplete="off">
             <input type="text" name="inputB" id="inputB" placeholder="b" autocomplete="off">
             <input type="text" name="inputC" id="inputC" placeholder="c (optional)" autocomplete="off">
@@ -28,10 +32,8 @@
         </form>
         <br>
         show/hide:
-        <input type="button" id="entitiesButton" value="entities">
-        <input type="button" id="dateButton" value="date">
-        <input type="button" id="timeButton" value="time">
-        <input type="button" id="interactionsButton" value="show all interactions">
+        <input type="button" name="entities" id="entitiesButton" value="entities">
+        <input type="button" name="interactions" id="interactionsButton" value="show all interactions">
         <br>
         <br>
         raw data:
@@ -58,7 +60,7 @@
                         <td>&nbsp;</td>
                     </tr>
                     <tr>
-                        <td><span>a/b</span>&nbsp;<span class="grey">(relationships/interactions)</span></td>
+                        <td><span>a/b</span>&nbsp;<span class="grey">(rels/ints)</span></td>
                     </tr>
                     <tr>
                         <td>&nbsp;</td>
