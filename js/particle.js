@@ -29,7 +29,7 @@ function Particle(x, y, pRadius, eRadius, static) {
 
         //draw the entity
         noStroke();
-        if (data.ent[i].h) {
+        if (data.app.ent[i].h) {
             fill(0, 0, 255);
             ellipse(0, 0, eRadius);
         } else {
